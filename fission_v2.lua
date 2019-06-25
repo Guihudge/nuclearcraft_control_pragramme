@@ -34,12 +34,13 @@ local barRF = charts.Container {
 
 function auto()
     auto_mode = 1
-    term.clear()
+    draw_interface(RF_max)
 end
 
 function disp_etat(RF)
     -- effacer sans clignotement l'affichage
     if overheat then
+        term.clear()
         gpu.setBackground(0x0000FF)
         gpu.set((w/2-4), (h/2), "OVERHEAT!")
     else
@@ -48,9 +49,9 @@ function disp_etat(RF)
         end
         gpu.set(15,1, "Appuyer sur A pour passer en mode " .. (auto_mode == 1 and "manuel" or "automatique"))
         gpu.set(etatx, etaty, "Générateur "..(reactor.isProcessing() and "ON " or "OFF"))
-        gpu.set(15,5, "Batterie: "..RF.." RF")
+        gpu.set(15,5, "Batterie: "..RF.. " RF                ")
     end
-    
+
     barRF.payload.value = RF
     barRF:draw()
 end
@@ -67,7 +68,7 @@ function user_input (RF)
     if auto_mode == 1 then
         if keyboard.isKeyDown(30) == true then
             auto_mode = 0
-            term.clear()
+            draw_interface(RF_max)
         end
         checkON(RF)
 
@@ -75,16 +76,16 @@ function user_input (RF)
         if keyboard.isKeyDown(24) then
            if reactor.isProcessing() then
                 reactor.deactivate()
-                term.clear()
+                draw_interface(RF_max)
             else
                 reactor.activate()
-                term.clear()
+                draw_interface(RF_max)
             end
         end
 
         if keyboard.isKeyDown(30) then
             auto_mode = 1
-            term.clear()
+            draw_interface(RF_max)
         end
     end
 end
@@ -94,10 +95,23 @@ function heat_error()
     if heat > heat_max-5000 then
         reactor.deactivate()
         overheat = true
+    elseif heat == 0 then
+        overheat = false
+        draw_interface()
+    
     end
 end
 
-term.clear()
+function draw_interface(RF_max)
+    draw_interface(RF_max)
+    gpu.fill(1,1,w,h,"█")
+    gpu.fill(2,2,w-2,h-2," ")
+
+end
+
+draw_interface(RF_max)
+
+draw_interface()
 
 while true do
     heat_error()
@@ -107,10 +121,8 @@ while true do
     end
     disp_etat(RF)
     heat_error()
-    os.sleep(0.1)
+    os.sleep(0.05)
 end
 
 
 term.clear()
-
---test
