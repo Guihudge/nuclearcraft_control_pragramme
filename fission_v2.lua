@@ -10,11 +10,14 @@ local w, h = gpu.getResolution()
 
 local RF = 0
 local RF_max = reactor.getMaxEnergyStored()
+local heat = 0
+local heat_max = reactor.getMaxHeatLevel()
 local auto_mode = 0
 local userinput = ""
 local event_ = ""
 local etatx = 15
 local etaty = 7
+local overheat = false 
 
 
 local barRF = charts.Container {
@@ -36,12 +39,19 @@ end
 
 function disp_etat(RF)
     -- effacer sans clignotement l'affichage
-
-    gpu.set(15,1, "Appuyer sur A pour passer en mode " .. (auto_mode == 1 and "manuel" or "automatique"))
-    gpu.set(etatx, etaty, "Générateur "..(reactor.isProcessing() and "ON" or "OFF"))
-    gpu.set(15,5, "Batterie: "..RF.." RF")
-    gpu.set(15,6, "Générateur " .. (reactor.isProcessing() and "allumé" or "arrêté") .. ", appuyer sur O pour " .. (reactor.isProcessing() and "l'arrêter" or "l'allumer"))
-
+    if overheat then
+        gpu.setBackground(0x0000FF)
+        gpu.set((w/2-4), (h/2), "OVERHEAT!")
+    else
+        if auto_mode == 0 then
+            gpu.set(15,6, "Générateur " .. (reactor.isProcessing() and "allumé" or "arrêté") .. ", appuyer sur O pour " .. (reactor.isProcessing() and "l'arrêter" or "l'allumer"))
+        end
+        gpu.set(15,1, "Appuyer sur A pour passer en mode " .. (auto_mode == 1 and "manuel" or "automatique"))
+        gpu.set(etatx, etaty, "Générateur "..(reactor.isProcessing() and "ON " or "OFF"))
+        gpu.set(15,5, "Batterie: "..RF.." RF")
+    end
+    
+    barRF.payload.value = RF
     barRF:draw()
 end
 
@@ -53,11 +63,7 @@ function checkON( RF )
     end
 end
 
-
-term.clear()
-
-while true do
-    RF = reactor.getEnergyStored()
+function user_input (RF)
     if auto_mode == 1 then
         if keyboard.isKeyDown(30) == true then
             auto_mode = 0
@@ -81,11 +87,26 @@ while true do
             term.clear()
         end
     end
-    
-    barRF.payload.value = RF
-    
-    disp_etat()
+end
 
+function heat_error()
+    heat = reactor.getHeatLevel()
+    if heat > heat_max-5000 then
+        reactor.deactivate()
+        overheat = true
+    end
+end
+
+term.clear()
+
+while true do
+    heat_error()
+    RF = reactor.getEnergyStored()
+    if not overheat then
+        user_input(RF)
+    end
+    disp_etat(RF)
+    heat_error()
     os.sleep(0.1)
 end
 
