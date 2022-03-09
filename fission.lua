@@ -91,15 +91,15 @@ local reactor = {
 }
 
 function initStruct()
-    reactor.isActivate = NCreactor.isReactorOn()
-    ractor.HeatCapacity = NCreactor.getMaxHeat()
+    reactor.isActivate = NCreactor.isProcessing()
+    ractor.HeatCapacity = NCreactor.getMaxHeatLevel()
     reactor.BatteryCapacity = NCreactor.getMaxEnergyStored()
 end
 
 function updateVal()
-  reactor.isActivate = NCreactor.isReactorOn()
+  reactor.isActivate = NCreactor.isProcessing()
   reactor.Batterystate = NCreactor.getEnergyStored()
-  reactor.HeatState = NCreactor.getHeat()
+  reactor.HeatState = NCreactor.getHeatLevel()
 
     --TESTING ONLY
     --if reactor.isActivate then
